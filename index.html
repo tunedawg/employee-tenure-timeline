@@ -1,0 +1,1270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Tenure Timeline</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5d6677;
+      --paper: #ffffff;
+      --line: rgba(23, 32, 51, 0.14);
+      --accent: #2563eb;
+      --gold: #d69e2e;
+      --red: #b4232f;
+      --shadow: 0 16px 40px rgba(18, 24, 38, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e9edf3;
+      overflow-x: hidden;
+    }
+
+    main {
+      width: min(1220px, calc(100vw - 20px));
+      margin: 10px auto;
+    }
+
+    .stage {
+      position: relative;
+      min-height: calc(100vh - 20px);
+      padding: 18px 28px 14px;
+      border: 1px solid rgba(23, 32, 51, 0.16);
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .stage:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      border-radius: 0;
+      padding: 14px 24px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stage:fullscreen .chart-wrap {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .stage:fullscreen svg {
+      width: min(99vw, calc((100vh - 48px) * 2.0678));
+      max-width: 99vw;
+      max-height: calc(100vh - 48px);
+    }
+
+    .stage:fullscreen header {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(96vw, 1220px);
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: none;
+    }
+
+    header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 3.4vw, 44px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .controls.hidden {
+      display: none;
+    }
+
+    .show-controls {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      z-index: 5;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid rgba(36, 48, 67, 0.14);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.94);
+      color: rgba(36, 48, 67, 0.78);
+      font: 800 11px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      box-shadow: 0 8px 22px rgba(36, 48, 67, 0.08);
+      cursor: pointer;
+    }
+
+    .show-controls.hidden {
+      display: none;
+    }
+
+    button, .upload, select {
+      height: 36px;
+      border: 1px solid rgba(36, 48, 67, 0.16);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--ink);
+      padding: 0 16px;
+      font: 700 13px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      box-shadow: 0 8px 24px rgba(36, 48, 67, 0.08);
+    }
+
+    button, .upload, select { cursor: pointer; }
+
+    select { padding-right: 34px; }
+
+    button.primary {
+      border: 0;
+      color: white;
+      background: #24364f;
+      min-width: 132px;
+      font-size: 14px;
+    }
+
+    .upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload input { display: none; }
+
+    .chart-wrap {
+      position: relative;
+      z-index: 1;
+      margin-top: 10px;
+      padding: 8px 14px 0 0;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .axis text, .names text, .bar-label {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .axis text {
+      fill: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .grid {
+      stroke: var(--line);
+      stroke-width: 1;
+    }
+
+    .era-green {
+      fill: rgba(4, 120, 87, 0.08);
+    }
+
+    .era-yellow {
+      fill: rgba(217, 119, 6, 0.12);
+    }
+
+    .era-red {
+      fill: rgba(180, 35, 47, 0.09);
+    }
+
+    .now-line {
+      stroke: #243043;
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0.72;
+    }
+
+    .year-pill {
+      fill: #243043;
+      filter: drop-shadow(0 16px 26px rgba(36, 48, 67, 0.22));
+    }
+
+    .year-text {
+      fill: #ffffff;
+      font-size: 38px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      letter-spacing: 0;
+    }
+
+    .name {
+      fill: #344054;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .duration {
+      fill: #697386;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .track {
+      fill: rgba(36, 48, 67, 0.07);
+    }
+
+    .bar {
+      filter: none;
+    }
+
+    .legacy-dim {
+      opacity: 0.22;
+      transition: opacity 220ms ease;
+    }
+
+    .keeper-glow {
+      filter: drop-shadow(0 0 8px rgba(184, 135, 34, 0.36));
+    }
+
+    .meadows-halo {
+      filter: drop-shadow(0 0 10px rgba(184, 135, 34, 0.45));
+    }
+
+    .bar-label {
+      fill: white;
+      font-size: 12px;
+      font-weight: 900;
+      opacity: 0;
+      transition: opacity 220ms ease;
+      pointer-events: none;
+    }
+
+    .bar-label.visible { opacity: 1; }
+
+    .bar-label.legacy-dim { opacity: 0.18; }
+
+    .icon-shell {
+      filter: drop-shadow(0 6px 8px rgba(18, 24, 38, 0.18));
+    }
+
+    .icon-ring {
+      fill: #ffffff;
+      stroke: rgba(23, 32, 51, 0.40);
+      stroke-width: 2.5;
+    }
+
+    .icon-accent {
+      fill: none;
+      stroke: rgba(23, 32, 51, 0.22);
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+
+    .icon-image {
+      image-rendering: auto;
+    }
+
+    .blast-ring {
+      fill: none;
+      stroke: rgba(180, 35, 47, 0.52);
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+
+    .game-over {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: #b4232f;
+      stroke: rgba(255, 255, 255, 0.92);
+      stroke-width: 5;
+      paint-order: stroke fill;
+      font-size: 88px;
+      letter-spacing: 0;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      filter: none;
+    }
+
+    .game-over-veil {
+      fill: rgba(255, 255, 255, 0.84);
+    }
+
+    .phase-veil {
+      fill: rgba(12, 18, 30, 0.78);
+      backdrop-filter: blur(10px);
+    }
+
+    .phase-title {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: #ffffff;
+      font-size: 44px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke fill;
+      stroke: rgba(12, 18, 30, 0.42);
+      stroke-width: 5;
+    }
+
+    .phase-title.long {
+      font-size: 34px;
+    }
+
+    .phase-hint {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: rgba(255, 253, 247, 0.76);
+      font-size: 20px;
+      font-weight: 800;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .phase-card-name {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: #fffdf7;
+      font-size: 24px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke fill;
+      stroke: rgba(18, 14, 24, 0.55);
+      stroke-width: 4;
+    }
+
+    .backdrop-blur {
+      filter: blur(5px) saturate(0.72);
+      opacity: 0.34;
+    }
+
+    .timeline-x line,
+    .phase-x line {
+      stroke: #b4232f;
+      stroke-linecap: round;
+    }
+
+    .timeline-x line {
+      stroke-width: 6;
+    }
+
+    .phase-x line {
+      stroke-width: 18;
+    }
+
+    @media (max-width: 860px) {
+      main { width: min(100vw - 16px, 1280px); margin: 8px auto; }
+      .stage { padding: 22px 16px; border-radius: 14px; }
+      header { flex-direction: column; }
+      .controls { justify-content: flex-start; min-width: 0; }
+      .chart-wrap { overflow-x: auto; padding-bottom: 12px; }
+      svg { min-width: 980px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="stage">
+      <header>
+        <div class="controls" aria-label="Timeline controls">
+          <button class="primary" id="playPause" type="button">Start / Space</button>
+          <button id="restart" type="button">Restart</button>
+          <button id="fullscreenBtn" type="button">Fullscreen</button>
+          <button id="hideControlsBtn" type="button">Hide Controls</button>
+          <select id="frameStyle" aria-label="Icon frame style">
+            <option value="circle">Circle frame</option>
+            <option value="scallop">Scallop frame</option>
+            <option value="diamond">Diamond frame</option>
+          </select>
+          <select id="iconPerson" aria-label="Select person for icon upload">
+            <option value="Vanessa Meadows">Vanessa Meadows</option>
+            <option value="Patricia Switzer">Patricia Switzer</option>
+            <option value="Peggy Guerrero">Peggy Guerrero</option>
+            <option value="April Johnson">April Johnson</option>
+            <option value="Cozetta Stokes">Cozetta Stokes</option>
+            <option value="Doritha Daniel">Doritha Daniel</option>
+            <option value="Jenifer Ellner">Jenifer Ellner</option>
+            <option value="Kimberlee Hanewinkel">Kimberlee Hanewinkel</option>
+            <option value="Cody Dayton">Cody Dayton</option>
+          </select>
+          <label class="upload">
+            Upload selected icon
+            <input id="iconUpload" type="file" accept="image/*" />
+          </label>
+        </div>
+        <button class="show-controls hidden" id="showControlsBtn" type="button">Show Controls Ctrl+H</button>
+      </header>
+
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 1220 590" role="img" aria-labelledby="chartTitle chartDesc">
+          <title id="chartTitle">Animated employee tenure timeline</title>
+          <desc id="chartDesc">Horizontal bars show employee tenure from 1977 through 2024, with moving icons synchronized to time.</desc>
+          <defs>
+            <clipPath id="softClip"><rect x="0" y="0" width="1220" height="590" rx="18"/></clipPath>
+            <clipPath id="iconCircleClip" clipPathUnits="userSpaceOnUse">
+              <circle cx="0" cy="0" r="26"/>
+            </clipPath>
+            <clipPath id="iconFeatureCircleClip" clipPathUnits="userSpaceOnUse">
+              <circle cx="0" cy="0" r="36"/>
+            </clipPath>
+            <linearGradient id="g0" x1="0" x2="1"><stop stop-color="#1d4ed8"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+            <linearGradient id="g1" x1="0" x2="1"><stop stop-color="#047857"/><stop offset="1" stop-color="#0f766e"/></linearGradient>
+            <linearGradient id="g2" x1="0" x2="1"><stop stop-color="#7c2d12"/><stop offset="1" stop-color="#be123c"/></linearGradient>
+            <linearGradient id="g3" x1="0" x2="1"><stop stop-color="#5b21b6"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+            <linearGradient id="g4" x1="0" x2="1"><stop stop-color="#0f766e"/><stop offset="1" stop-color="#155e75"/></linearGradient>
+            <linearGradient id="g5" x1="0" x2="1"><stop stop-color="#92400e"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+            <linearGradient id="g6" x1="0" x2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+            <linearGradient id="g7" x1="0" x2="1"><stop stop-color="#831843"/><stop offset="1" stop-color="#b91c1c"/></linearGradient>
+            <linearGradient id="g8" x1="0" x2="1"><stop stop-color="#b45309"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+          </defs>
+          <g id="story"></g>
+          <g id="grid" class="axis"></g>
+          <g id="bars"></g>
+          <g id="icons"></g>
+          <g id="yearBadge">
+            <rect class="year-pill" x="340" y="398" width="154" height="72" rx="18"/>
+            <text class="year-text" id="yearText" x="417" y="435">1977</text>
+          </g>
+          <g id="effects"></g>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const employees = [
+      { name: "Vanessa Meadows", start: 1992, end: 2022, gradient: "g8", featured: true },
+      { name: "Patricia Switzer", start: 1977, end: 2022, gradient: "g0" },
+      { name: "Peggy Guerrero", start: 1990, end: 2022, gradient: "g1" },
+      { name: "April Johnson", start: 1992, end: 2022, gradient: "g2" },
+      { name: "Cozetta Stokes", start: 2000, end: 2022, gradient: "g3" },
+      { name: "Doritha Daniel", start: 2000, end: 2019, gradient: "g4" },
+      { name: "Jenifer Ellner", start: 2017, end: 2024, gradient: "g5" },
+      { name: "Kimberlee Hanewinkel", start: 2021, end: 2024, gradient: "g6" },
+      { name: "Cody Dayton", start: 2021, end: 2024, gradient: "g7" }
+    ];
+
+    const stage = document.querySelector(".stage");
+    const svg = document.getElementById("chart");
+    const grid = document.getElementById("grid");
+    const story = document.getElementById("story");
+    const bars = document.getElementById("bars");
+    const icons = document.getElementById("icons");
+    const effects = document.getElementById("effects");
+    const yearText = document.getElementById("yearText");
+    const playPause = document.getElementById("playPause");
+    const restart = document.getElementById("restart");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const hideControlsBtn = document.getElementById("hideControlsBtn");
+    const showControlsBtn = document.getElementById("showControlsBtn");
+    const controls = document.querySelector(".controls");
+    const upload = document.getElementById("iconUpload");
+    const frameStyle = document.getElementById("frameStyle");
+    const iconPerson = document.getElementById("iconPerson");
+
+    const minYear = 1977;
+    const maxYear = 2024;
+    const plot = { left: 220, focus: 760, right: 1160, top: 62, rowGap: 48, barHeight: 19 };
+    const segments = [
+      { from: 1977, to: 2017, ms: 8200 },
+      { from: 2017, to: 2019, ms: 2600 },
+      { from: 2019, to: 2021, ms: 2800 },
+      { from: 2021, to: 2022, ms: 1800 },
+      { from: 2022, to: 2024, ms: 3000 }
+    ];
+    const durationMs = segments.reduce((sum, segment) => sum + segment.ms, 0);
+    const phaseStops = [
+      { year: 2017, elapsed: 8200, event: "jen", title: "2017: Jenifer Ellner Joins Wash U", people: ["Jenifer Ellner"], variant: "omen" },
+      { year: 2019, elapsed: 10800, title: "2019", people: ["Jenifer Ellner", "Doritha Daniel"], variant: "center" },
+      { year: 2019, elapsed: 10800, title: "2019: Ellner fires Doritha Daniel", people: ["Jenifer Ellner", "Doritha Daniel"], variant: "fade-doritha" },
+      { year: 2021, elapsed: 13600, event: "kim-cody", title: "2021: Hanewinkel, Dayton, Ellner join Ortho", people: ["Kimberlee Hanewinkel", "Cody Dayton", "Jenifer Ellner"], variant: "omen" },
+      { year: 2022, elapsed: 15400, event: "legacy-exit", title: "", people: [], variant: "firing-blast" },
+      { year: 2022, elapsed: 15400, title: "2022: Wash U cleans house", people: ["Vanessa Meadows", "Patricia Switzer", "Peggy Guerrero", "April Johnson", "Cozetta Stokes"], variant: "firing" },
+      { year: 2022, elapsed: 15400, title: ["2022: Wash U fires Vanessa Meadows", "because of her race, age,", "and disability."], people: ["Vanessa Meadows"], variant: "vanessa-fired" }
+    ];
+    const iconDataUrls = {};
+    const storageKey = "employee-tenure-timeline-icons-v1";
+    const frameStorageKey = "employee-tenure-timeline-frame-v1";
+    let iconFrameStyle = "circle";
+    let playing = false;
+    let startTime = performance.now();
+    let pausedAt = performance.now();
+    let ended = false;
+    let currentElapsed = 0;
+    let phaseIndex = 0;
+    let activePhase = null;
+    let blastStartTime = null;
+    let blastComplete = false;
+    let hasStarted = false;
+
+    const ns = "http://www.w3.org/2000/svg";
+    const make = (tag, attrs = {}) => {
+      const el = document.createElementNS(ns, tag);
+      for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+      return el;
+    };
+
+    function xForYear(year) {
+      if (year <= 2017) {
+        return plot.left + ((year - minYear) / (2017 - minYear)) * (plot.focus - plot.left);
+      }
+      return plot.focus + ((year - 2017) / (maxYear - 2017)) * (plot.right - plot.focus);
+    }
+
+    function timelineState(elapsed) {
+      let cursor = 0;
+      for (const segment of segments) {
+        if (elapsed <= cursor + segment.ms) {
+          const local = (elapsed - cursor) / segment.ms;
+          return {
+            year: segment.from + local * (segment.to - segment.from),
+            event: null,
+            eventProgress: 0
+          };
+        }
+        cursor += segment.ms;
+      }
+      return { year: maxYear, event: null, eventProgress: 0 };
+    }
+
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+    function loadPersistedIcons() {
+      try {
+        const savedIcons = JSON.parse(localStorage.getItem(storageKey) || "{}");
+        Object.assign(iconDataUrls, savedIcons);
+        const savedFrame = localStorage.getItem(frameStorageKey);
+        if (savedFrame) {
+          iconFrameStyle = savedFrame;
+          frameStyle.value = savedFrame;
+        }
+      } catch {
+        localStorage.removeItem(storageKey);
+      }
+    }
+
+    function persistIcons() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(iconDataUrls));
+        localStorage.setItem(frameStorageKey, iconFrameStyle);
+      } catch {
+        alert("This browser could not save all icons locally. Try smaller image files, or use committed image assets for a hosted version.");
+      }
+    }
+
+    function drawGrid() {
+      const ticks = [1977, 1985, 1995, 2005, 2010, 2017, 2019, 2020, 2021, 2022, 2023, 2024];
+      const bottom = plot.top + employees.length * plot.rowGap + 18;
+
+      story.appendChild(make("rect", {
+        class: "era-green",
+        x: plot.left,
+        y: 42,
+        width: xForYear(2017) - plot.left,
+        height: bottom - 42,
+        rx: 18
+      }));
+      story.appendChild(make("rect", {
+        class: "era-yellow",
+        x: xForYear(2017),
+        y: 42,
+        width: xForYear(2022) - xForYear(2017),
+        height: bottom - 42,
+        rx: 18
+      }));
+      story.appendChild(make("rect", {
+        class: "era-red",
+        x: xForYear(2022),
+        y: 42,
+        width: xForYear(2024) - xForYear(2022),
+        height: bottom - 42,
+        rx: 18
+      }));
+
+      for (const year of ticks) {
+        const x = xForYear(year);
+        grid.appendChild(make("line", { class: "grid", x1: x, y1: 48, x2: x, y2: bottom }));
+        const text = make("text", { x, y: bottom + 32, "text-anchor": "middle" });
+        text.textContent = year;
+        grid.appendChild(text);
+      }
+
+      const axis = make("line", { x1: plot.left, y1: bottom, x2: plot.right, y2: bottom, stroke: "rgba(36,48,67,.35)", "stroke-width": 1.5 });
+      grid.appendChild(axis);
+
+      const breakMark = make("path", {
+        d: `M ${xForYear(2017) - 10} ${bottom - 8} l 8 16 M ${xForYear(2017) + 2} ${bottom - 8} l 8 16`,
+        stroke: "rgba(36,48,67,.42)",
+        "stroke-width": 2,
+        fill: "none",
+        "stroke-linecap": "round"
+      });
+      grid.appendChild(breakMark);
+
+      const nowLine = make("line", { id: "nowLine", class: "now-line", x1: plot.left, y1: 46, x2: plot.left, y2: bottom });
+      story.appendChild(nowLine);
+    }
+
+    function addFrame(group, fill = "#314761", scale = 1) {
+      if (iconFrameStyle === "diamond") {
+        group.appendChild(make("polygon", { class: "icon-ring", points: `0,${-32 * scale} ${32 * scale},0 0,${32 * scale} ${-32 * scale},0` }));
+        group.appendChild(make("polygon", { class: "icon-accent", points: `0,${-26 * scale} ${26 * scale},0 0,${26 * scale} ${-26 * scale},0` }));
+        return;
+      }
+
+      if (iconFrameStyle === "scallop") {
+        group.appendChild(make("path", {
+          class: "icon-ring",
+          d: "M 0 -33 C 6 -27 12 -32 16 -25 C 18 -17 26 -20 28 -11 C 25 -2 34 3 29 12 C 22 17 27 24 17 28 C 9 28 6 35 0 30 C -6 35 -9 28 -17 28 C -27 24 -22 17 -29 12 C -34 3 -25 -2 -28 -11 C -26 -20 -18 -17 -16 -25 C -12 -32 -6 -27 0 -33 Z"
+        }));
+        group.appendChild(make("circle", { class: "icon-accent", cx: 0, cy: 0, r: 25 }));
+        return;
+      }
+
+      group.appendChild(make("circle", { class: "icon-ring", cx: 0, cy: 0, r: 30 * scale }));
+      group.appendChild(make("circle", { class: "icon-accent", cx: 0, cy: 0, r: 25 * scale }));
+    }
+
+    function placeholderIcon(group, fill = "#314761", scale = 1) {
+      addFrame(group, fill, scale);
+      group.appendChild(make("circle", { cx: 0, cy: -5 * scale, r: 11 * scale, fill }));
+      group.appendChild(make("path", { d: `M ${-18 * scale} ${16 * scale} C ${-12 * scale} ${2 * scale} ${12 * scale} ${2 * scale} ${18 * scale} ${16 * scale} Z`, fill }));
+      group.appendChild(make("circle", { cx: -5 * scale, cy: -5 * scale, r: 1.7 * scale, fill: "#fffdf7" }));
+      group.appendChild(make("circle", { cx: 5 * scale, cy: -5 * scale, r: 1.7 * scale, fill: "#fffdf7" }));
+    }
+
+    function uploadedIcon(group, imageUrl, fill = "#314761", scale = 1) {
+      addFrame(group, fill, scale);
+      const imageSize = 52 * scale;
+      group.appendChild(make("image", {
+        class: "icon-image",
+        href: imageUrl,
+        x: -imageSize / 2,
+        y: -imageSize / 2,
+        width: imageSize,
+        height: imageSize,
+        "clip-path": scale > 1 ? "url(#iconFeatureCircleClip)" : "url(#iconCircleClip)",
+        preserveAspectRatio: "xMidYMid slice"
+      }));
+    }
+
+    function drawBurst(eventName, progress) {
+      effects.innerHTML = "";
+      svg.style.transformOrigin = "50% 50%";
+      svg.style.transition = "none";
+
+      if (!eventName) {
+        svg.style.transform = "translate(0, 0)";
+        return;
+      }
+
+      const centerX = eventName === "jen" ? xForYear(2017) : eventName === "kim-cody" ? xForYear(2021) : xForYear(2022);
+      const centerY = eventName === "jen" ? plot.top + 6 * plot.rowGap : eventName === "kim-cody" ? plot.top + 7.5 * plot.rowGap : plot.top + 2.6 * plot.rowGap;
+      const strength = eventName === "legacy-exit" ? 1.8 : 1.15;
+      const pulse = Math.sin(progress * Math.PI);
+      const shake = Math.sin(progress * Math.PI * 28) * 9 * pulse * strength;
+      const lift = Math.cos(progress * Math.PI * 24) * 5 * pulse * strength;
+      svg.style.transform = `translate(${shake}px, ${lift}px)`;
+
+      const ringRadius = 70 + 780 * progress * strength;
+      const screenOpacity = Math.max(0, Math.sin(progress * Math.PI) * 0.22);
+      effects.appendChild(make("rect", {
+        x: 0,
+        y: 0,
+        width: 1220,
+        height: 590,
+        fill: "#b4232f",
+        opacity: screenOpacity
+      }));
+      effects.appendChild(make("circle", {
+        class: "blast-ring",
+        cx: centerX,
+        cy: centerY,
+        r: ringRadius,
+        opacity: Math.max(0, 0.46 - progress * 0.44)
+      }));
+      effects.appendChild(make("circle", {
+        class: "blast-ring",
+        cx: centerX,
+        cy: centerY,
+        r: ringRadius * 0.42,
+        opacity: Math.max(0, 0.36 - progress * 0.32)
+      }));
+      for (let i = 0; i < 9; i++) {
+        const y = 92 + i * 48;
+        effects.appendChild(make("line", {
+          x1: 0,
+          y1: y + Math.sin(progress * Math.PI * 8 + i) * 7 * pulse,
+          x2: 1220,
+          y2: y - Math.sin(progress * Math.PI * 8 + i) * 7 * pulse,
+          stroke: "#b4232f",
+          "stroke-width": 1.5,
+          opacity: Math.max(0, 0.20 - progress * 0.17)
+        }));
+      }
+    }
+
+    function drawGameOver() {
+      effects.innerHTML = "";
+      svg.style.transform = "translate(0, 0)";
+      effects.appendChild(make("rect", {
+        class: "game-over-veil",
+        x: 0,
+        y: 0,
+        width: 1220,
+        height: 590
+      }));
+      const text = make("text", { class: "game-over", x: 610, y: 295 });
+      text.textContent = "GAME OVER!";
+      effects.appendChild(text);
+    }
+
+    function employeeByName(name) {
+      return employees.find((emp) => emp.name === name);
+    }
+
+    function phaseIcon(group, emp, x, y, scale, opacity = 1) {
+      const gradientColors = {
+        "Vanessa Meadows": "#d97706",
+        "Patricia Switzer": "#1d4ed8",
+        "Peggy Guerrero": "#047857",
+        "April Johnson": "#be123c",
+        "Cozetta Stokes": "#5b21b6",
+        "Doritha Daniel": "#0f766e",
+        "Jenifer Ellner": "#d97706",
+        "Kimberlee Hanewinkel": "#2563eb",
+        "Cody Dayton": "#b91c1c"
+      };
+      const icon = make("g", {
+        transform: `translate(${x} ${y})`,
+        opacity
+      });
+      if (iconDataUrls[emp.name]) uploadedIcon(icon, iconDataUrls[emp.name], gradientColors[emp.name] || "#314761", scale);
+      else placeholderIcon(icon, gradientColors[emp.name] || "#314761", scale);
+      const label = make("text", { class: "phase-card-name", x, y: y + 56 * scale });
+      label.textContent = emp.name;
+      group.appendChild(icon);
+      group.appendChild(label);
+      return { icon, label, x, y, scale };
+    }
+
+    function addPhaseX(group, x, y, size = 92) {
+      const mark = make("g", { class: "phase-x" });
+      mark.appendChild(make("line", { x1: x - size, y1: y - size, x2: x + size, y2: y + size }));
+      mark.appendChild(make("line", { x1: x + size, y1: y - size, x2: x - size, y2: y + size }));
+      group.appendChild(mark);
+    }
+
+    function showPhaseOverlay(phase) {
+      activePhase = phase;
+      effects.innerHTML = "";
+      if (phase.variant === "firing") drawBurst(phase.event || null, 0.58);
+      else svg.style.transform = "translate(0, 0)";
+
+      const yearBadge = document.getElementById("yearBadge");
+      yearBadge.setAttribute("opacity", "0.06");
+
+      if (phase.variant === "firing-blast") {
+        blastStartTime = null;
+        blastComplete = false;
+        return;
+      }
+
+      story.classList.add("backdrop-blur");
+      grid.classList.add("backdrop-blur");
+      bars.classList.add("backdrop-blur");
+      icons.classList.add("backdrop-blur");
+      effects.appendChild(make("rect", {
+        class: "phase-veil",
+        x: 0,
+        y: 0,
+        width: 1220,
+        height: 590,
+        opacity: phase.variant === "firing" ? 0.52 : 0.76
+      }));
+
+      const titleLines = Array.isArray(phase.title) ? phase.title : [phase.title];
+      titleLines.forEach((line, i) => {
+        const title = make("text", {
+          class: phase.variant === "vanessa-fired" ? "phase-title long" : "phase-title",
+          x: 610,
+          y: titleLines.length > 1 ? 72 + i * 42 : 104
+        });
+        title.textContent = line;
+        effects.appendChild(title);
+      });
+
+      const people = phase.people.map(employeeByName).filter(Boolean);
+      const spacing = people.length > 3 ? 218 : 330;
+      const startX = 610 - ((people.length - 1) * spacing) / 2;
+      const rendered = [];
+      people.forEach((emp, i) => {
+        const isDorithaFade = phase.variant === "fade-doritha" && emp.name === "Doritha Daniel";
+        const isMeadows = emp.name === "Vanessa Meadows";
+        let scale = people.length > 3 ? 1.82 : 2.65;
+        if (phase.variant === "vanessa-fired") scale = 3.15;
+        rendered.push(phaseIcon(effects, emp, startX + i * spacing, isDorithaFade ? 314 : 300, scale, isDorithaFade ? 0.16 : 1));
+      });
+
+      if (phase.variant === "fade-doritha" || phase.variant === "firing" || phase.variant === "vanessa-fired") {
+        rendered.forEach((item) => {
+          if (!item) return;
+          if (phase.variant === "fade-doritha" && item.label.textContent !== "Doritha Daniel") return;
+          addPhaseX(effects, item.x, item.y, phase.variant === "fade-doritha" ? 92 : phase.variant === "vanessa-fired" ? 88 : 66);
+        });
+      }
+
+      const hint = make("text", { class: "phase-hint", x: 610, y: 550 });
+      hint.textContent = "Click or press Space to continue";
+      effects.appendChild(hint);
+    }
+
+    function clearPhaseOverlay() {
+      activePhase = null;
+      effects.innerHTML = "";
+      svg.style.transform = "translate(0, 0)";
+      document.getElementById("yearBadge").setAttribute("opacity", "1");
+      story.classList.remove("backdrop-blur");
+      grid.classList.remove("backdrop-blur");
+      bars.classList.remove("backdrop-blur");
+      icons.classList.remove("backdrop-blur");
+    }
+
+    function drawRows() {
+      bars.innerHTML = "";
+      icons.innerHTML = "";
+
+      employees.forEach((emp, i) => {
+        const y = plot.top + i * plot.rowGap;
+        const startX = xForYear(emp.start);
+        const endX = xForYear(emp.end);
+        const width = endX - startX;
+        const barHeight = emp.featured ? plot.barHeight * 1.45 : plot.barHeight;
+        const iconScale = emp.featured ? 1.38 : 1;
+
+        const name = make("text", { class: "name", x: plot.left - 18, y: y + 6, "text-anchor": "end" });
+        name.setAttribute("data-index", i);
+        name.textContent = emp.name;
+        bars.appendChild(name);
+
+        const duration = make("text", { class: "duration", x: plot.left - 18, y: y + 24, "text-anchor": "end" });
+        duration.setAttribute("data-index", i);
+        duration.textContent = `${emp.start}-${emp.end}`;
+        bars.appendChild(duration);
+
+        const track = make("rect", {
+          class: "track",
+          "data-index": i,
+          x: startX,
+          y: y - barHeight / 2,
+          width,
+          height: barHeight,
+          rx: barHeight / 2
+        });
+        bars.appendChild(track);
+
+        const bar = make("rect", {
+          class: "bar",
+          "data-index": i,
+          x: startX,
+          y: y - barHeight / 2,
+          width: 0,
+          height: barHeight,
+          rx: barHeight / 2,
+          fill: `url(#${emp.gradient})`
+        });
+        bars.appendChild(bar);
+
+        const label = make("text", { class: "bar-label", "data-index": i, x: startX + 12, y: y + 4 });
+        label.textContent = `${emp.start}-${emp.end}`;
+        bars.appendChild(label);
+
+        const icon = make("g", { class: emp.featured ? "icon-shell meadows-halo" : "icon-shell", "data-index": i, transform: `translate(${startX} ${y})` });
+        const gradientColors = ["#d97706", "#1d4ed8", "#047857", "#be123c", "#5b21b6", "#0f766e", "#d97706", "#2563eb", "#b91c1c"];
+        if (iconDataUrls[emp.name]) {
+          uploadedIcon(icon, iconDataUrls[emp.name], gradientColors[i], iconScale);
+        } else {
+          placeholderIcon(icon, gradientColors[i], iconScale);
+        }
+        const mark = make("g", { class: "timeline-x", "data-index": i, opacity: 0 });
+        mark.appendChild(make("line", { x1: -18 * iconScale, y1: -18 * iconScale, x2: 18 * iconScale, y2: 18 * iconScale }));
+        mark.appendChild(make("line", { x1: 18 * iconScale, y1: -18 * iconScale, x2: -18 * iconScale, y2: 18 * iconScale }));
+        icon.appendChild(mark);
+        icons.appendChild(icon);
+      });
+    }
+
+    function drawFrame(now) {
+      if (ended) {
+        requestAnimationFrame(drawFrame);
+        return;
+      }
+
+      if (activePhase) {
+        if (activePhase.variant === "firing-blast" && !blastComplete) {
+          if (blastStartTime === null) blastStartTime = now;
+          const blastProgress = Math.min(1, (now - blastStartTime) / 2600);
+          drawBurst(activePhase.event || null, blastProgress);
+          document.getElementById("yearBadge").setAttribute("opacity", "0.06");
+          if (blastProgress >= 1) {
+            blastComplete = true;
+            svg.style.transform = "translate(0, 0)";
+            const hint = make("text", { class: "phase-hint", x: 610, y: 550 });
+            hint.textContent = "Click or press Space to continue";
+            effects.appendChild(hint);
+          }
+        }
+        requestAnimationFrame(drawFrame);
+        return;
+      }
+
+      if (!playing && pausedAt !== null) {
+        requestAnimationFrame(drawFrame);
+        return;
+      }
+
+      const elapsed = now - startTime;
+      const nextPhase = phaseStops[phaseIndex];
+      if (nextPhase && elapsed >= nextPhase.elapsed) {
+        currentElapsed = nextPhase.elapsed;
+        renderTimelineState({ ...timelineState(nextPhase.elapsed), event: nextPhase.event || null, eventProgress: 0.58 });
+        playing = false;
+        pausedAt = performance.now();
+        playPause.textContent = "Continue / Space";
+        showPhaseOverlay(nextPhase);
+        requestAnimationFrame(drawFrame);
+        return;
+      }
+
+      if (elapsed >= durationMs) {
+        const state = { year: maxYear, event: null, eventProgress: 0 };
+        renderTimelineState(state);
+        drawGameOver();
+        ended = true;
+        playing = false;
+        pausedAt = performance.now();
+        yearText.textContent = maxYear.toString();
+        playPause.textContent = "Play / Space";
+        requestAnimationFrame(drawFrame);
+        return;
+      }
+
+      const state = timelineState(elapsed);
+      currentElapsed = elapsed;
+      renderTimelineState(state);
+      requestAnimationFrame(drawFrame);
+    }
+
+    function renderTimelineState(state) {
+      const currentYear = state.year;
+      yearText.textContent = Math.floor(currentYear).toString();
+      drawBurst(state.event, state.eventProgress);
+
+      const bottom = plot.top + employees.length * plot.rowGap + 18;
+      const nowLine = document.getElementById("nowLine");
+      nowLine.setAttribute("x1", xForYear(currentYear));
+      nowLine.setAttribute("x2", xForYear(currentYear));
+      nowLine.setAttribute("y2", bottom);
+
+      employees.forEach((emp, i) => {
+        const rowY = plot.top + i * plot.rowGap;
+        const startX = xForYear(emp.start);
+        const endX = xForYear(emp.end);
+        const progress = clamp((currentYear - emp.start) / (emp.end - emp.start), 0, 1);
+        const activeYear = clamp(currentYear, emp.start, emp.end);
+        const x = xForYear(activeYear);
+        const isKeeper = emp.name === "Jenifer Ellner" || emp.name === "Kimberlee Hanewinkel" || emp.name === "Cody Dayton";
+        const isDoritha = emp.name === "Doritha Daniel";
+        const isVanessa = emp.name === "Vanessa Meadows";
+        const visualExitYear = isDoritha ? 2019 : isKeeper ? emp.end : 2022;
+        const exitProgress = isKeeper ? 0 : clamp((currentYear - visualExitYear) / 1.2, 0, 1);
+        const exitLift = -36 * exitProgress;
+        const exitDrift = 38 * exitProgress;
+        const exitOpacity = 1 - 0.88 * exitProgress;
+
+        const bar = bars.querySelector(`.bar[data-index="${i}"]`);
+        const icon = icons.querySelector(`.icon-shell[data-index="${i}"]`);
+        const label = bars.querySelector(`.bar-label[data-index="${i}"]`);
+        const track = bars.querySelector(`.track[data-index="${i}"]`);
+        const name = bars.querySelector(`.name[data-index="${i}"]`);
+        const duration = bars.querySelector(`.duration[data-index="${i}"]`);
+        const mark = icons.querySelector(`.timeline-x[data-index="${i}"]`);
+
+        const visibleWidth = Math.max(0, x - startX);
+        bar.setAttribute("width", visibleWidth);
+        icon.setAttribute("transform", `translate(${x + exitDrift} ${rowY + exitLift}) scale(${1 - 0.22 * exitProgress})`);
+        icon.setAttribute("opacity", exitOpacity);
+        bar.setAttribute("opacity", exitOpacity);
+        mark.setAttribute("opacity", exitProgress > 0 ? Math.min(1, 0.25 + exitProgress) : 0);
+
+        if ((!isKeeper && currentYear > 2022) || (isDoritha && currentYear > 2019)) {
+          bar.classList.add("legacy-dim");
+          track.classList.add("legacy-dim");
+          name.classList.add("legacy-dim");
+          duration.classList.add("legacy-dim");
+          label.classList.add("legacy-dim");
+        } else {
+          bar.classList.remove("legacy-dim");
+          track.classList.remove("legacy-dim");
+          name.classList.remove("legacy-dim");
+          duration.classList.remove("legacy-dim");
+          label.classList.remove("legacy-dim");
+        }
+
+        if (isKeeper && currentYear >= 2021) icon.classList.add("keeper-glow");
+        else icon.classList.remove("keeper-glow");
+
+        if (progress > 0.18) label.classList.add("visible");
+        else label.classList.remove("visible");
+      });
+
+    }
+
+    function continuePhase() {
+      if (!activePhase) return false;
+      if (activePhase.variant === "firing-blast" && !blastComplete) return true;
+      const finishedPhase = activePhase;
+      clearPhaseOverlay();
+      blastStartTime = null;
+      blastComplete = false;
+      phaseIndex += 1;
+
+      const nextPhase = phaseStops[phaseIndex];
+      if (nextPhase && nextPhase.elapsed === finishedPhase.elapsed) {
+        renderTimelineState({ ...timelineState(nextPhase.elapsed), event: nextPhase.event || null, eventProgress: 0.58 });
+        showPhaseOverlay(nextPhase);
+        playPause.textContent = "Continue / Space";
+        return true;
+      }
+
+      playing = true;
+      pausedAt = null;
+      currentElapsed = finishedPhase.elapsed;
+      startTime = performance.now() - currentElapsed - 20;
+      playPause.textContent = "Pause / Space";
+      return true;
+    }
+
+    function togglePlayback() {
+      if (continuePhase()) return;
+
+      if (!hasStarted) {
+        hasStarted = true;
+        playing = true;
+        pausedAt = null;
+        startTime = performance.now();
+        playPause.textContent = "Pause / Space";
+        return;
+      }
+
+      if (ended) {
+        startTime = performance.now();
+        pausedAt = null;
+        ended = false;
+        hasStarted = true;
+        phaseIndex = 0;
+        activePhase = null;
+        blastStartTime = null;
+        blastComplete = false;
+        currentElapsed = 0;
+        playing = true;
+        effects.innerHTML = "";
+        renderTimelineState({ year: minYear, event: null, eventProgress: 0 });
+        playPause.textContent = "Pause / Space";
+        return;
+      }
+      playing = !playing;
+      playPause.textContent = playing ? "Pause / Space" : "Play / Space";
+      if (!playing) {
+        pausedAt = performance.now();
+      } else {
+        startTime += performance.now() - pausedAt;
+        pausedAt = null;
+      }
+    }
+
+    playPause.addEventListener("click", () => {
+      togglePlayback();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      const target = event.target;
+      const isTyping = target && (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA");
+      if (event.code === "Space" && !isTyping) {
+        event.preventDefault();
+        togglePlayback();
+      }
+      if (event.ctrlKey && event.key.toLowerCase() === "h" && !isTyping) {
+        event.preventDefault();
+        const nextHidden = !controls.classList.contains("hidden");
+        controls.classList.toggle("hidden", nextHidden);
+        showControlsBtn.classList.toggle("hidden", !nextHidden);
+      }
+    });
+
+    restart.addEventListener("click", () => {
+      startTime = performance.now();
+      pausedAt = null;
+      ended = false;
+      phaseIndex = 0;
+      activePhase = null;
+      blastStartTime = null;
+      blastComplete = false;
+      currentElapsed = 0;
+      hasStarted = false;
+      playing = false;
+      pausedAt = performance.now();
+      effects.innerHTML = "";
+      renderTimelineState({ year: minYear, event: null, eventProgress: 0 });
+      playPause.textContent = "Start / Space";
+    });
+
+    stage.addEventListener("click", (event) => {
+      if (!activePhase) return;
+      if (event.target.closest("button, select, label, input")) return;
+      continuePhase();
+    });
+
+    fullscreenBtn.addEventListener("click", async () => {
+      if (!document.fullscreenElement) {
+        await stage.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      fullscreenBtn.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
+    });
+
+    hideControlsBtn.addEventListener("click", () => {
+      controls.classList.add("hidden");
+      showControlsBtn.classList.remove("hidden");
+    });
+
+    showControlsBtn.addEventListener("click", () => {
+      controls.classList.remove("hidden");
+      showControlsBtn.classList.add("hidden");
+    });
+
+    frameStyle.addEventListener("change", () => {
+      iconFrameStyle = frameStyle.value;
+      persistIcons();
+      drawRows();
+    });
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function detectFaceBox(img) {
+      if (!("FaceDetector" in window)) return null;
+      try {
+        const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+        const faces = await detector.detect(img);
+        if (!faces || !faces.length) return null;
+        return faces[0].boundingBox;
+      } catch {
+        return null;
+      }
+    }
+
+    async function makePortraitIcon(src) {
+      const img = await loadImage(src);
+      const face = await detectFaceBox(img);
+      const canvas = document.createElement("canvas");
+      const size = 320;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      let cropSize;
+      let centerX;
+      let centerY;
+
+      if (face) {
+        cropSize = Math.max(face.width, face.height) * 2.05;
+        centerX = face.x + face.width / 2;
+        centerY = face.y + face.height * 0.48;
+      } else {
+        cropSize = Math.min(img.naturalWidth, img.naturalHeight);
+        centerX = img.naturalWidth / 2;
+        centerY = img.naturalHeight / 2;
+      }
+
+      cropSize = Math.min(cropSize, img.naturalWidth, img.naturalHeight);
+      let sx = centerX - cropSize / 2;
+      let sy = centerY - cropSize / 2;
+      sx = clamp(sx, 0, img.naturalWidth - cropSize);
+      sy = clamp(sy, 0, img.naturalHeight - cropSize);
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, size, size);
+      return canvas.toDataURL("image/png");
+    }
+
+    upload.addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const selectedPerson = iconPerson.value;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        iconDataUrls[selectedPerson] = await makePortraitIcon(reader.result);
+        persistIcons();
+        upload.value = "";
+        drawRows();
+        if (!activePhase) renderTimelineState(timelineState(currentElapsed));
+        if (activePhase) showPhaseOverlay(activePhase);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    loadPersistedIcons();
+    drawGrid();
+    drawRows();
+    requestAnimationFrame(drawFrame);
+  </script>
+</body>
+</html>
