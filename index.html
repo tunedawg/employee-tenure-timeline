@@ -967,153 +967,76 @@
         });
       }
 
-      function addMilestone({ x, y, date, title, lines, color = "#2563eb", side = "top", alert = false }) {
-        const cardWidth = 192;
-        const cardHeight = 92;
-        const cardX = x - cardWidth / 2;
-        const cardY = side === "top" ? y - 142 : y + 50;
-        const dotY = y;
-        effects.appendChild(make("line", {
-          x1: x,
-          y1: side === "top" ? dotY - 14 : dotY + 14,
-          x2: x,
-          y2: side === "top" ? cardY + cardHeight : cardY,
-          stroke: "rgba(23, 32, 51, 0.20)",
-          "stroke-width": 2
-        }));
-        effects.appendChild(make("rect", {
-          x: cardX,
-          y: cardY,
-          width: cardWidth,
-          height: cardHeight,
-          rx: 6,
-          fill: "#ffffff",
-          stroke: alert ? "rgba(180, 35, 47, 0.46)" : "rgba(23, 32, 51, 0.14)",
-          "stroke-width": alert ? 2 : 1.4
-        }));
-        const bar = make("rect", { x: cardX, y: cardY, width: 6, height: cardHeight, rx: 3, fill: color });
-        effects.appendChild(bar);
-        const dateText = make("text", { class: "final-card-date", x: cardX + 18, y: cardY + 24 });
-        dateText.textContent = date;
-        effects.appendChild(dateText);
-        const titleText = make("text", { class: "final-card-title", x: cardX + 18, y: cardY + 46 });
-        titleText.textContent = title;
-        effects.appendChild(titleText);
-        addTextLines(effects, lines, cardX + 18, cardY + 67, 16, { class: "final-label" });
-        effects.appendChild(make("circle", { cx: x, cy: dotY, r: 14, fill: "#ffffff", stroke: color, "stroke-width": alert ? 5 : 4 }));
-        if (alert) {
-          effects.appendChild(make("line", { x1: x - 7, y1: dotY - 7, x2: x + 7, y2: dotY + 7, stroke: "#b4232f", "stroke-width": 3, "stroke-linecap": "round" }));
-          effects.appendChild(make("line", { x1: x + 7, y1: dotY - 7, x2: x - 7, y2: dotY + 7, stroke: "#b4232f", "stroke-width": 3, "stroke-linecap": "round" }));
-        } else {
-          effects.appendChild(make("circle", { cx: x, cy: dotY, r: 5, fill: color }));
-        }
-      }
-
-      const axisY = 300;
-      effects.appendChild(make("line", {
-        x1: 120,
-        y1: axisY,
-        x2: 760,
-        y2: axisY,
-        stroke: "rgba(23, 32, 51, 0.26)",
-        "stroke-width": 4,
-        "stroke-linecap": "round"
+      const table = { x: 92, y: 142, width: 1036, header: 38, row: 46 };
+      const columns = { date: 116, event: 350, detail: 570 };
+      effects.appendChild(make("rect", {
+        x: table.x,
+        y: table.y,
+        width: table.width,
+        height: table.header + table.row * 8,
+        rx: 6,
+        fill: "#ffffff",
+        stroke: "rgba(23, 32, 51, 0.16)",
+        "stroke-width": 1.4
       }));
       effects.appendChild(make("rect", {
-        x: 805,
-        y: 154,
-        width: 315,
-        height: 316,
-        rx: 8,
-        fill: "rgba(180, 35, 47, 0.06)",
-        stroke: "rgba(180, 35, 47, 0.24)",
-        "stroke-width": 1.5
+        x: table.x,
+        y: table.y,
+        width: table.width,
+        height: table.header,
+        rx: 6,
+        fill: "#24364f"
       }));
       effects.appendChild(make("rect", {
-        x: 805,
-        y: 154,
-        width: 315,
-        height: 42,
-        rx: 8,
-        fill: "rgba(180, 35, 47, 0.10)"
+        x: table.x,
+        y: table.y + 24,
+        width: table.width,
+        height: 14,
+        fill: "#24364f"
       }));
-      const clusterTitle = make("text", { class: "final-card-title", x: 828, y: 181 });
-      clusterTitle.textContent = "Focused Period: 2021-2024";
-      effects.appendChild(clusterTitle);
 
-      addMilestone({
-        x: 145,
-        y: axisY,
-        date: "1977",
-        title: "Patricia Switzer",
-        lines: ["begins long-term", "WashU employment"],
-        color: "#1d4ed8",
-        side: "top"
-      });
-      addMilestone({
-        x: 295,
-        y: axisY,
-        date: "1992",
-        title: "Legacy employees",
-        lines: ["Vanessa Meadows,", "April Johnson,", "Peggyann Guerrero"],
-        color: "#b88722",
-        side: "bottom"
-      });
-      addMilestone({
-        x: 448,
-        y: axisY,
-        date: "2001",
-        title: "Stokes / Daniel",
-        lines: ["Cozetta Stokes and", "Doritha Daniel tenures"],
-        color: "#0f766e",
-        side: "top"
-      });
-      addMilestone({
-        x: 596,
-        y: axisY,
-        date: "2018",
-        title: "Jenifer Ellner",
-        lines: ["hired as Director,", "Revenue Cycle"],
-        color: "#92400e",
-        side: "bottom"
-      });
-      addMilestone({
-        x: 700,
-        y: axisY,
-        date: "2019",
-        title: "Doritha Daniel",
-        lines: ["terminated after", "Ellner arrives"],
-        color: "#b4232f",
-        side: "top",
-        alert: true
+      ["Date", "Event", "Why It Matters"].forEach((label, index) => {
+        const x = index === 0 ? table.x + 22 : index === 1 ? table.x + columns.date + 22 : table.x + columns.date + columns.event + 22;
+        const text = make("text", { x, y: table.y + 25, fill: "#ffffff", "font-size": 13, "font-weight": 900, "font-family": "Inter, ui-sans-serif, system-ui, sans-serif" });
+        text.textContent = label;
+        effects.appendChild(text);
       });
 
-      const arrivalsTitle = make("text", { class: "final-card-date", x: 828, y: 225 });
-      arrivalsTitle.textContent = "ARRIVALS";
-      effects.appendChild(arrivalsTitle);
-      addTextLines(effects, ["2021  Cody Dayton transfers into Ortho", "2022  Kimberlee Hanewinkel joins Ortho"], 828, 250, 21, { class: "final-label" });
-
-      const departureTitle = make("text", { class: "final-card-date", x: 828, y: 316 });
-      departureTitle.textContent = "DEPARTURES";
-      effects.appendChild(departureTitle);
-      const departures = [
-        ["Jan.", "Patricia Switzer"],
-        ["May", "Cozetta Stokes"],
-        ["Sep.", "Peggyann Guerrero"],
-        ["Nov.", "April Johnson"],
-        ["Late 2022", "Vanessa Meadows"]
+      const rows = [
+        { date: "1977", event: ["Patricia Switzer begins", "long-term WashU employment"], detail: ["Earliest tenure shown; 44+ years of employment."], tone: "#1d4ed8" },
+        { date: "1992", event: ["Vanessa Meadows, April Johnson,", "and Peggyann Guerrero begin era"], detail: ["Long-tenure employees later affected in 2022."], tone: "#b88722" },
+        { date: "2001", event: ["Cozetta Stokes and", "Doritha Daniel begin tenures"], detail: ["Additional long-tenure employees in the department."], tone: "#0f766e" },
+        { date: "2018", event: ["Jenifer Ellner hired", "as Revenue Cycle Director"], detail: ["Leadership change precedes disputed terminations."], tone: "#92400e" },
+        { date: "2019", event: ["Doritha Daniel terminated"], detail: ["First termination after Ellner arrives."], tone: "#b4232f", alert: true },
+        { date: "2021-2022", event: ["Cody Dayton transfers into Ortho;", "Kimberlee Hanewinkel joins Ortho"], detail: ["New personnel arrive before the 2022 departures."], tone: "#2563eb" },
+        { date: "2022", event: ["Departure sequence"], detail: ["Jan. Patricia Switzer; May Cozetta Stokes; Sep. Peggyann Guerrero;", "Nov. April Johnson; Late 2022 Vanessa Meadows."], tone: "#b4232f", alert: true },
+        { date: "After 2022", event: ["Ellner, Hanewinkel,", "and Dayton remain employed"], detail: ["Contrast with the long-tenure employees who left in 2022."], tone: "#24364f" }
       ];
-      addTextLines(effects, departures.map((item) => item[0]), 885, 342, 22, { class: "final-card-date", "text-anchor": "end" });
-      addTextLines(effects, departures.map((item) => item[1]), 905, 342, 22, { class: "final-label" });
-      departures.forEach((_, index) => {
-        const y = 338 + index * 22;
-        effects.appendChild(make("circle", { cx: 830, cy: y - 1, r: 5, fill: "#b4232f" }));
-      });
 
-      const remainTitle = make("text", { class: "final-card-date", x: 828, y: 438 });
-      remainTitle.textContent = "REMAINING AFTER 2022";
-      effects.appendChild(remainTitle);
-      addTextLines(effects, ["Jenifer Ellner, Kimberlee Hanewinkel,", "and Cody Dayton remain employed."], 828, 459, 19, { class: "final-label" });
+      rows.forEach((row, index) => {
+        const y = table.y + table.header + index * table.row;
+        effects.appendChild(make("rect", {
+          x: table.x,
+          y,
+          width: table.width,
+          height: table.row,
+          fill: row.alert ? "rgba(180, 35, 47, 0.055)" : index % 2 ? "#ffffff" : "#f8fafc"
+        }));
+        effects.appendChild(make("rect", { x: table.x, y, width: 7, height: table.row, fill: row.tone }));
+        effects.appendChild(make("line", {
+          x1: table.x,
+          y1: y + table.row,
+          x2: table.x + table.width,
+          y2: y + table.row,
+          stroke: "rgba(23, 32, 51, 0.10)",
+          "stroke-width": 1
+        }));
+        const dateText = make("text", { class: "final-card-date", x: table.x + 22, y: y + 28 });
+        dateText.textContent = row.date;
+        effects.appendChild(dateText);
+        addTextLines(effects, row.event, table.x + columns.date + 22, y + 18, 17, { class: "final-card-title" });
+        addTextLines(effects, row.detail, table.x + columns.date + columns.event + 22, y + 18, 17, { class: "final-label" });
+      });
 
     }
 
