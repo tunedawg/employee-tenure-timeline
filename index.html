@@ -673,6 +673,10 @@
     function uploadedIcon(group, imageUrl, fill = "#314761", scale = 1) {
       addFrame(group, fill, scale);
       const imageSize = 52 * scale;
+      const clipId = `iconClip-${Math.random().toString(36).slice(2)}`;
+      const clip = make("clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
+      clip.appendChild(make("circle", { cx: 0, cy: 0, r: 26 * scale }));
+      group.appendChild(clip);
       group.appendChild(make("image", {
         class: "icon-image",
         href: imageUrl,
@@ -680,7 +684,7 @@
         y: -imageSize / 2,
         width: imageSize,
         height: imageSize,
-        "clip-path": scale > 1 ? "url(#iconFeatureCircleClip)" : "url(#iconCircleClip)",
+        "clip-path": `url(#${clipId})`,
         preserveAspectRatio: "xMidYMid slice"
       }));
     }
@@ -832,14 +836,13 @@
       });
 
       const people = phase.people.map(employeeByName).filter(Boolean);
-      const spacing = people.length > 3 ? 218 : 330;
+      const spacing = people.length > 3 ? 225 : people.length === 3 ? 345 : 390;
       const startX = 610 - ((people.length - 1) * spacing) / 2;
       const rendered = [];
       people.forEach((emp, i) => {
         const isDorithaFade = phase.variant === "fade-doritha" && emp.name === "Doritha Daniel";
-        const isMeadows = emp.name === "Vanessa Meadows";
-        let scale = people.length > 3 ? 1.82 : 2.65;
-        if (phase.variant === "vanessa-fired") scale = 3.15;
+        let scale = people.length > 3 ? 2.15 : people.length === 3 ? 3.05 : 3.25;
+        if (phase.variant === "vanessa-fired") scale = 4.15;
         rendered.push(phaseIcon(effects, emp, startX + i * spacing, isDorithaFade ? 314 : 300, scale, isDorithaFade ? 0.16 : 1));
       });
 
