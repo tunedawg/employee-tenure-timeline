@@ -341,7 +341,7 @@
     .final-title {
       font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       fill: #172033;
-      font-size: 34px;
+      font-size: 32px;
       font-weight: 950;
       text-anchor: middle;
       letter-spacing: 0;
@@ -368,9 +368,22 @@
     .final-label {
       font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       fill: #202b3d;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 850;
-      text-anchor: middle;
+    }
+
+    .final-card-title {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: #172033;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .final-card-date {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      fill: #5d6677;
+      font-size: 12px;
+      font-weight: 900;
     }
 
     .final-note {
@@ -946,78 +959,161 @@
       subtitle.textContent = "Washington University Orthopedics employment events and disputed terminations";
       effects.appendChild(subtitle);
 
-      const events = [
-        { year: "1977", width: 82, lines: ["Patricia Switzer", "begins at WashU"], color: "#1d4ed8" },
-        { year: "1992", width: 122, lines: ["Vanessa Meadows,", "April Johnson,", "Peggyann Guerrero"], color: "#b88722" },
-        { year: "2001", width: 108, lines: ["Cozetta Stokes", "and Doritha Daniel"], color: "#0f766e" },
-        { year: "2018", width: 96, lines: ["Jenifer Ellner", "joins WashU"], color: "#7c2d12", flagged: true },
-        { year: "2019", width: 94, lines: ["Doritha Daniel", "terminated"], color: "#b4232f", xmark: true },
-        { year: "2021", width: 88, lines: ["Cody Dayton", "joins Ortho"], color: "#831843", flagged: true },
-        { year: "2022", width: 108, lines: ["Kimberlee", "Hanewinkel", "joins Ortho"], color: "#2563eb", flagged: true },
-        { year: "2022", width: 240, lines: ["Patricia Switzer,", "Cozetta Stokes,", "Peggyann Guerrero,", "April Johnson,", "Vanessa Meadows"], color: "#b4232f", xmark: true },
-        { year: "2024", width: 126, lines: ["Ellner, Hanewinkel,", "and Dayton remain"], color: "#24364f" }
-      ];
+      function addTextLines(group, lines, x, y, lineHeight, attrs = {}) {
+        lines.forEach((line, index) => {
+          const text = make("text", { x, y: y + index * lineHeight, ...attrs });
+          text.textContent = line;
+          group.appendChild(text);
+        });
+      }
 
-      const baseY = 302;
-      const startX = 78;
-      const segmentHeight = 44;
-      const markerXs = [];
-      let cursorX = startX;
-
-      events.forEach((event, i) => {
-        const x = cursorX;
-        const segmentWidth = event.width;
-        const color = event.color;
-        markerXs.push(x + segmentWidth / 2);
-        effects.appendChild(make("path", {
-          d: chevronPath(x, baseY - segmentHeight / 2, segmentWidth + (i === events.length - 1 ? 14 : 0), segmentHeight, i === 0, i === events.length - 1),
-          fill: color,
-          opacity: event.xmark ? 0.98 : 0.9
-        }));
-        const segYear = make("text", { class: "final-year", x: x + segmentWidth / 2, y: baseY });
-        segYear.textContent = event.year;
-        effects.appendChild(segYear);
-        cursorX += segmentWidth;
-      });
-
-      events.forEach((event, i) => {
-        const x = markerXs[i];
-        const above = i % 2 === 0;
-        const circleY = above ? 188 : 420;
-        const labelY = above ? 142 : 460;
+      function addMilestone({ x, y, date, title, lines, color = "#2563eb", side = "top", alert = false }) {
+        const cardWidth = 192;
+        const cardHeight = 92;
+        const cardX = x - cardWidth / 2;
+        const cardY = side === "top" ? y - 142 : y + 50;
+        const dotY = y;
         effects.appendChild(make("line", {
           x1: x,
-          y1: above ? baseY - 22 : baseY + 22,
+          y1: side === "top" ? dotY - 14 : dotY + 14,
           x2: x,
-          y2: circleY,
-          stroke: "rgba(23, 32, 51, 0.22)",
+          y2: side === "top" ? cardY + cardHeight : cardY,
+          stroke: "rgba(23, 32, 51, 0.20)",
           "stroke-width": 2
         }));
-        effects.appendChild(make("circle", {
-          cx: x,
-          cy: circleY,
-          r: event.flagged ? 20 : 17,
+        effects.appendChild(make("rect", {
+          x: cardX,
+          y: cardY,
+          width: cardWidth,
+          height: cardHeight,
+          rx: 6,
           fill: "#ffffff",
-          stroke: event.color,
-          "stroke-width": event.flagged ? 5 : 3.5
+          stroke: alert ? "rgba(180, 35, 47, 0.46)" : "rgba(23, 32, 51, 0.14)",
+          "stroke-width": alert ? 2 : 1.4
         }));
-        if (event.xmark) {
-          effects.appendChild(make("line", { x1: x - 10, y1: circleY - 10, x2: x + 10, y2: circleY + 10, stroke: "#b4232f", "stroke-width": 4, "stroke-linecap": "round" }));
-          effects.appendChild(make("line", { x1: x + 10, y1: circleY - 10, x2: x - 10, y2: circleY + 10, stroke: "#b4232f", "stroke-width": 4, "stroke-linecap": "round" }));
+        const bar = make("rect", { x: cardX, y: cardY, width: 6, height: cardHeight, rx: 3, fill: color });
+        effects.appendChild(bar);
+        const dateText = make("text", { class: "final-card-date", x: cardX + 18, y: cardY + 24 });
+        dateText.textContent = date;
+        effects.appendChild(dateText);
+        const titleText = make("text", { class: "final-card-title", x: cardX + 18, y: cardY + 46 });
+        titleText.textContent = title;
+        effects.appendChild(titleText);
+        addTextLines(effects, lines, cardX + 18, cardY + 67, 16, { class: "final-label" });
+        effects.appendChild(make("circle", { cx: x, cy: dotY, r: 14, fill: "#ffffff", stroke: color, "stroke-width": alert ? 5 : 4 }));
+        if (alert) {
+          effects.appendChild(make("line", { x1: x - 7, y1: dotY - 7, x2: x + 7, y2: dotY + 7, stroke: "#b4232f", "stroke-width": 3, "stroke-linecap": "round" }));
+          effects.appendChild(make("line", { x1: x + 7, y1: dotY - 7, x2: x - 7, y2: dotY + 7, stroke: "#b4232f", "stroke-width": 3, "stroke-linecap": "round" }));
         } else {
-          effects.appendChild(make("circle", { cx: x, cy: circleY, r: 6, fill: event.color }));
+          effects.appendChild(make("circle", { cx: x, cy: dotY, r: 5, fill: color }));
         }
+      }
 
-        event.lines.forEach((line, lineIndex) => {
-          const label = make("text", {
-            class: "final-label",
-            x,
-            y: labelY + lineIndex * 18
-          });
-          label.textContent = line;
-          effects.appendChild(label);
-        });
+      const axisY = 300;
+      effects.appendChild(make("line", {
+        x1: 120,
+        y1: axisY,
+        x2: 760,
+        y2: axisY,
+        stroke: "rgba(23, 32, 51, 0.26)",
+        "stroke-width": 4,
+        "stroke-linecap": "round"
+      }));
+      effects.appendChild(make("rect", {
+        x: 805,
+        y: 154,
+        width: 315,
+        height: 316,
+        rx: 8,
+        fill: "rgba(180, 35, 47, 0.06)",
+        stroke: "rgba(180, 35, 47, 0.24)",
+        "stroke-width": 1.5
+      }));
+      effects.appendChild(make("rect", {
+        x: 805,
+        y: 154,
+        width: 315,
+        height: 42,
+        rx: 8,
+        fill: "rgba(180, 35, 47, 0.10)"
+      }));
+      const clusterTitle = make("text", { class: "final-card-title", x: 828, y: 181 });
+      clusterTitle.textContent = "Focused Period: 2021-2024";
+      effects.appendChild(clusterTitle);
+
+      addMilestone({
+        x: 145,
+        y: axisY,
+        date: "1977",
+        title: "Patricia Switzer",
+        lines: ["begins long-term", "WashU employment"],
+        color: "#1d4ed8",
+        side: "top"
       });
+      addMilestone({
+        x: 295,
+        y: axisY,
+        date: "1992",
+        title: "Legacy employees",
+        lines: ["Vanessa Meadows,", "April Johnson,", "Peggyann Guerrero"],
+        color: "#b88722",
+        side: "bottom"
+      });
+      addMilestone({
+        x: 448,
+        y: axisY,
+        date: "2001",
+        title: "Stokes / Daniel",
+        lines: ["Cozetta Stokes and", "Doritha Daniel tenures"],
+        color: "#0f766e",
+        side: "top"
+      });
+      addMilestone({
+        x: 596,
+        y: axisY,
+        date: "2018",
+        title: "Jenifer Ellner",
+        lines: ["hired as Director,", "Revenue Cycle"],
+        color: "#92400e",
+        side: "bottom"
+      });
+      addMilestone({
+        x: 700,
+        y: axisY,
+        date: "2019",
+        title: "Doritha Daniel",
+        lines: ["terminated after", "Ellner arrives"],
+        color: "#b4232f",
+        side: "top",
+        alert: true
+      });
+
+      const arrivalsTitle = make("text", { class: "final-card-date", x: 828, y: 225 });
+      arrivalsTitle.textContent = "ARRIVALS";
+      effects.appendChild(arrivalsTitle);
+      addTextLines(effects, ["2021  Cody Dayton transfers into Ortho", "2022  Kimberlee Hanewinkel joins Ortho"], 828, 250, 21, { class: "final-label" });
+
+      const departureTitle = make("text", { class: "final-card-date", x: 828, y: 316 });
+      departureTitle.textContent = "DEPARTURES";
+      effects.appendChild(departureTitle);
+      const departures = [
+        ["Jan.", "Patricia Switzer"],
+        ["May", "Cozetta Stokes"],
+        ["Sep.", "Peggyann Guerrero"],
+        ["Nov.", "April Johnson"],
+        ["Late 2022", "Vanessa Meadows"]
+      ];
+      addTextLines(effects, departures.map((item) => item[0]), 885, 342, 22, { class: "final-card-date", "text-anchor": "end" });
+      addTextLines(effects, departures.map((item) => item[1]), 905, 342, 22, { class: "final-label" });
+      departures.forEach((_, index) => {
+        const y = 338 + index * 22;
+        effects.appendChild(make("circle", { cx: 830, cy: y - 1, r: 5, fill: "#b4232f" }));
+      });
+
+      const remainTitle = make("text", { class: "final-card-date", x: 828, y: 438 });
+      remainTitle.textContent = "REMAINING AFTER 2022";
+      effects.appendChild(remainTitle);
+      addTextLines(effects, ["Jenifer Ellner, Kimberlee Hanewinkel,", "and Cody Dayton remain employed."], 828, 459, 19, { class: "final-label" });
 
     }
 
