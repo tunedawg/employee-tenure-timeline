@@ -575,7 +575,7 @@
       { from: 2018, to: 2019, ms: 1430 },
       { from: 2020, to: 2021, ms: 3760 },
       { from: 2021, to: 2022, ms: 5170 },
-      { from: 2022, to: 2023, ms: 10340 },
+      { from: 2022, to: 2023, ms: 4300 },
       { from: 2023, to: 2024, ms: 4230 }
     ];
     const durationMs = segments.reduce((sum, segment) => sum + segment.ms, 0);
@@ -585,9 +585,9 @@
       { year: 2019, elapsed: 16360, title: "2019: Ellner fires Doritha Daniel", people: ["Jenifer Ellner", "Doritha Daniel"], variant: "fade-doritha" },
       { year: 2021, elapsed: 20120, event: "kim-cody", title: "2021: Cody Dayton joins Ortho", people: ["Cody Dayton"], variant: "omen" },
       { year: 2022, elapsed: 25290, event: "kim-cody", title: "2022: Kimberlee Hanewinkel joins Ortho", people: ["Kimberlee Hanewinkel"], variant: "omen" },
-      { year: 2022.98, elapsed: 35423, event: "legacy-exit", title: "", people: [], variant: "firing-blast" },
-      { year: 2022.98, elapsed: 35423, title: "2022: Wash U cleans house", people: ["Vanessa Meadows", "Patricia Switzer", "Peggyann Guerrero", "April Johnson", "Cozetta Stokes"], variant: "firing" },
-      { year: 2022.98, elapsed: 35423, title: ["2022: Wash U fires Vanessa Meadows", "because of her race, age,", "and disability."], people: ["Vanessa Meadows"], variant: "vanessa-fired" }
+      { year: 2022.98, elapsed: 29504, event: "legacy-exit", title: "", people: [], variant: "firing-blast" },
+      { year: 2022.98, elapsed: 29504, title: "2022: Wash U cleans house", people: ["Vanessa Meadows", "Patricia Switzer", "Peggyann Guerrero", "April Johnson", "Cozetta Stokes"], variant: "firing" },
+      { year: 2022.98, elapsed: 29504, title: ["2022: Wash U fires Vanessa Meadows", "because of her race, age,", "and disability."], people: ["Vanessa Meadows"], variant: "vanessa-fired" }
     ];
     const iconDataUrls = {};
     const storageKey = "employee-tenure-timeline-icons-v1";
@@ -1004,13 +1004,13 @@
 
       const rows = [
         { date: "1977", event: ["Patricia Switzer begins", "long-term WashU employment"], detail: ["Earliest tenure shown; 44+ years of employment."], tone: "#1d4ed8" },
-        { date: "1992", event: ["Vanessa Meadows, April Johnson,", "and Peggyann Guerrero begin era"], detail: ["Long-tenure employees later affected in 2022."], tone: "#b88722" },
+        { date: "1992", event: ["Vanessa Meadows, April Johnson,", "and Peggyann Guerrero begin era"], detail: ["Long-tenure employees later affected within months in 2022."], tone: "#b88722" },
         { date: "2001", event: ["Cozetta Stokes and", "Doritha Daniel begin tenures"], detail: ["Additional long-tenure employees in the department."], tone: "#0f766e" },
         { date: "2018", event: ["Jenifer Ellner hired", "as Revenue Cycle Director"], detail: ["Leadership change precedes disputed terminations."], tone: "#92400e" },
         { date: "2019", event: ["Doritha Daniel terminated"], detail: ["First termination after Ellner arrives."], tone: "#b4232f", alert: true },
         { date: "2021-2022", event: ["Cody Dayton transfers into Ortho;", "Kimberlee Hanewinkel joins Ortho"], detail: ["New personnel arrive before the 2022 departures."], tone: "#2563eb" },
-        { date: "2022", event: ["Departure sequence"], detail: ["Jan. Patricia Switzer; May Cozetta Stokes; Sep. Peggyann Guerrero;", "Nov. April Johnson; Late 2022 Vanessa Meadows."], tone: "#b4232f", alert: true },
-        { date: "After 2022", event: ["Ellner, Hanewinkel,", "and Dayton remain employed"], detail: ["Contrast with the long-tenure employees who left in 2022."], tone: "#24364f" }
+        { date: "2022", event: ["Compressed departure sequence"], detail: ["After decades of tenure, five departures occur within the same year:", "Jan. Switzer; May Stokes; Sep. Guerrero; Nov./late 2022 Johnson and Meadows."], tone: "#b4232f", alert: true },
+        { date: "After 2022", event: ["Ellner, Hanewinkel,", "and Dayton remain employed"], detail: ["Contrast with the long-tenure employees who left within months."], tone: "#24364f" }
       ];
 
       rows.forEach((row, index) => {
